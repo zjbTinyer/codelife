@@ -223,9 +223,14 @@ workflow-skills/
 │   ├── deploy-guard.sh            # 部署后验证
 │   ├── db-inspect.sh              # GCP PostgreSQL 诊断
 │   └── jenkins-debug.sh           # Jenkins 问题定位
-└── claude-code/
-    ├── settings-skills.json       # Slash Commands 注册模板
-    └── hooks/                      # PreToolUse/PostToolUse 钩子
+├── claude-code/                     # Claude Code 集成
+│   ├── settings-skills.json        # Slash Commands 注册
+│   └── hooks/                       # PreToolUse/PostToolUse 钩子
+└── copilot/                          # 🤖 Copilot 集成
+    ├── README.md                     #    集成说明
+    ├── copilot-instructions.md       #    → 复制到 .github/copilot-instructions.md
+    ├── tasks.json                    #    → 复制到 .vscode/tasks.json
+    └── Makefile                      #    → 复制到项目根目录
 ```
 
 ---

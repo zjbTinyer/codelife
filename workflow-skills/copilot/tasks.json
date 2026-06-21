@@ -1,0 +1,125 @@
+{
+  "version": "2.0.0",
+  "_comment": "复制此文件到 .vscode/tasks.json，或合并到已有的 tasks.json 中",
+  "tasks": [
+    {
+      "label": "🔍 Pre-MR Gate — 提 MR 前检查",
+      "type": "shell",
+      "command": "./skills/pre-mr-gate.sh",
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "new" },
+      "problemMatcher": []
+    },
+    {
+      "label": "📊 Coverage Hunt — 覆盖率分析 (80%)",
+      "type": "shell",
+      "command": "./skills/coverage-hunt.py",
+      "args": ["80"],
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "new" }
+    },
+    {
+      "label": "🧪 Coverage Hunt — 生成测试骨架",
+      "type": "shell",
+      "command": "./skills/coverage-hunt.py",
+      "args": ["80", "--generate-tests", "--dry-run"],
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "new" }
+    },
+    {
+      "label": "🛡️ Scan Triage — SonarQube API 分析",
+      "type": "shell",
+      "command": "./skills/scan-triage.py",
+      "args": [
+        "--sonar-url", "${input:sonarUrl}",
+        "--sonar-project-key", "${input:sonarProjectKey}"
+      ],
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "new" }
+    },
+    {
+      "label": "🔧 Scan Triage — 自动修复预览",
+      "type": "shell",
+      "command": "./skills/scan-triage.py",
+      "args": [
+        "--sonar-url", "${input:sonarUrl}",
+        "--sonar-project-key", "${input:sonarProjectKey}",
+        "--auto-fix", "--dry-run"
+      ],
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "new" }
+    },
+    {
+      "label": "✅ Deploy Guard — 部署后验证 (dev)",
+      "type": "shell",
+      "command": "./skills/deploy-guard.sh",
+      "args": ["dev"],
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "new" }
+    },
+    {
+      "label": "✅ Deploy Guard — 部署后验证 (staging)",
+      "type": "shell",
+      "command": "./skills/deploy-guard.sh",
+      "args": ["staging"],
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "new" }
+    },
+    {
+      "label": "🗄️ DB Inspect — GCP PostgreSQL 诊断",
+      "type": "shell",
+      "command": "./skills/db-inspect.sh",
+      "args": [
+        "--gcp-instance", "${input:gcpInstance}",
+        "--db", "${input:dbName}",
+        "--diagnose"
+      ],
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "new" }
+    },
+    {
+      "label": "🗄️ DB Inspect — 列出 SA Key",
+      "type": "shell",
+      "command": "./skills/db-inspect.sh",
+      "args": ["--list-keys"],
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "new" }
+    },
+    {
+      "label": "🐛 Jenkins Debug — 分析最近构建",
+      "type": "shell",
+      "command": "./skills/jenkins-debug.sh",
+      "args": ["--job", "${input:jenkinsJob}", "--build", "last"],
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "new" }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "sonarUrl",
+      "type": "promptString",
+      "description": "SonarQube URL",
+      "default": "https://sonarqube.company.com"
+    },
+    {
+      "id": "sonarProjectKey",
+      "type": "promptString",
+      "description": "SonarQube Project Key (如 com.company:order-service)"
+    },
+    {
+      "id": "gcpInstance",
+      "type": "promptString",
+      "description": "GCP Cloud SQL 实例 (如 project:region:instance)"
+    },
+    {
+      "id": "dbName",
+      "type": "promptString",
+      "description": "数据库名"
+    },
+    {
+      "id": "jenkinsJob",
+      "type": "promptString",
+      "description": "Jenkins Job 名称"
+    }
+  ]
+}
