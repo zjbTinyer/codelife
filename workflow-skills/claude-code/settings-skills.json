@@ -1,0 +1,36 @@
+{
+  "_说明": "将此文件内容合并到你的 ~/.claude/settings.json 或 .claude/settings.json 的 slashCommands 数组中",
+
+  "slashCommands": [
+    {
+      "name": "/pre-mr-gate",
+      "description": "提 MR 前一键检查：编译 + 单元测试 + 覆盖率 + BDD",
+      "prompt": "执行 skills/pre-mr-gate.sh 进行 MR 前门禁检查。\n\n如果全部通过，总结结果并告知可以提 MR。\n如果失败：\n1. 编译失败 → 分析错误信息，直接修复代码\n2. 测试失败 → 查看失败的测试，分析原因并修复\n3. 覆盖率不足 → 建议运行 /coverage-hunt\n4. BDD 失败 → 检查 BDD 脚本和测试数据\n\n输出结构化检查报告。"
+    },
+    {
+      "name": "/scan-triage",
+      "description": "分析 Sonar/NexusIQ/Cyberflow 扫描报告，AI 分类并给出修复建议",
+      "prompt": "执行 skills/scan-triage.py 分析扫描报告。\n\n首先确认报告来源：\n- 如果有本地报告文件，指定路径（如 --sonar target/sonar/report.json）\n- 如果是 Jenkins 构建结果，用 --jenkins-url\n\n分析完成后：\n1. 总结各类问题的数量和严重度分布\n2. 识别可自动修复的问题，用 --auto-fix --dry-run 先预览\n3. 对 blocker/critical 问题给出详细的修复方案\n4. 对代码修改类的问题，直接生成修复后的代码\n5. 给出修复优先级建议：先 easy 后 hard，先 blocker 后 info"
+    },
+    {
+      "name": "/coverage-hunt",
+      "description": "分析覆盖率缺口，生成 JUnit 测试骨架",
+      "prompt": "执行 skills/coverage-hunt.py 分析代码覆盖率。\n\n1. 如果没有 JaCoCo 报告，先运行 mvn jacoco:report\n2. 分析覆盖率缺口，按 Controller > Service > Repository 优先级排序\n3. 对 Top-N 未覆盖的方法，分析源码并生成高质量的 JUnit 5 测试\n4. 测试应该包含：正常场景、边界条件（null/空集合）、异常场景\n5. 生成后输出测试文件的路径和关键测试方法的说明\n6. 建议运行 /pre-mr-gate 验证覆盖率是否提升"
+    },
+    {
+      "name": "/deploy-guard",
+      "description": "G3 部署后自动健康检查 + API 冒烟 + DB 连接验证",
+      "prompt": "执行 skills/deploy-guard.sh 进行部署后健康验证。\n\n确认目标环境（dev/staging/prod），如果是生产环境请用户先确认。\n\n检查结果的处理：\n1. 健康检查失败 → 检查 Pod 状态、查看应用日志\n2. 数据库连接失败 → 检查 Cloud SQL Proxy、连接参数\n3. API 冒烟失败 → 检查路由配置、服务发现\n4. 5xx 错误 → 提取错误日志，分析根因\n\n输出部署健康报告，给出明确的 pass/fail 结论。"
+    },
+    {
+      "name": "/db-inspect",
+      "description": "GCP PostgreSQL 诊断：慢查询、锁、连接数、表大小",
+      "prompt": "执行 skills/db-inspect.sh 进行数据库诊断。\n\n根据用户需求选择模式：\n- 日常检查：运行 --diagnose 获取全面诊断报告\n- 问题排查：重点关注长时间运行的查询和锁等待\n- 表结构查看：--schema <table> 查看字段、索引、约束\n- 自定义查询：--query（只允许 SELECT，写操作需要用户确认）\n\n输出诊断结果并用中文解释关键指标：\n- 缓存命中率 < 95% → 可能需要增加内存或优化查询\n- 死元组 > 10% → 需要 VACUUM\n- 长时间查询 → 可能需要索引优化"
+    },
+    {
+      "name": "/jenkins-debug",
+      "description": "分析 Jenkins Pipeline 构建日志，定位失败原因",
+      "prompt": "执行 skills/jenkins-debug.sh 分析 Jenkins 构建日志。\n\n根据用户提供的信息选择数据源：\n- 有 Jenkins URL 和 Job 名 → 远程拉取日志\n- 用户粘贴了日志 → 分析本地日志文件\n\n分析重点：\n1. 定位失败的 Stage（devx build? test? sonar? g3 deploy?）\n2. 提取错误堆栈和关键错误信息\n3. 按错误模式库匹配，给出中文修复建议\n4. 如果涉及代码问题，直接生成修复方案\n5. 输出下一步的调试命令（如 /scan-triage, /coverage-hunt）"
+    }
+  ]
+}
