@@ -1,0 +1,67 @@
+name: DB Inspect — GCP PostgreSQL 诊断
+
+on:
+  workflow_dispatch:
+    inputs:
+      gcp_instance:
+        description: GCP Cloud SQL 实例 (project:region:instance)
+        required: true
+      db_name:
+        description: 数据库名
+        required: true
+      mode:
+        description: 诊断模式
+        required: true
+        type: choice
+        options: [diagnose, tables, schema, monitor, query]
+        default: diagnose
+      schema_table:
+        description: 表名 (mode=schema 时需要)
+        required: false
+        default: ''
+      custom_query:
+        description: 自定义 SQL (mode=query 时需要，仅 SELECT)
+        required: false
+        default: ''
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Auth GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup Cloud SQL Proxy
+        uses: google-github-actions/setup-cloud-sql-proxy@v2
+        with:
+          instance: ${{ inputs.gcp_instance }}
+
+      - name: 运行 DB Inspect
+        env:
+          DB_HOST: localhost
+          DB_PORT: '5432'
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          chmod +x ./skills/db-inspect.sh
+          case "${{ inputs.mode }}" in
+            diagnose)
+              ./skills/db-inspect.sh --db ${{ inputs.db_name }} --diagnose --no-proxy
+              ;;
+            tables)
+              ./skills/db-inspect.sh --db ${{ inputs.db_name }} --tables --no-proxy
+              ;;
+            schema)
+              ./skills/db-inspect.sh --db ${{ inputs.db_name }} --schema "${{ inputs.schema_table }}" --no-proxy
+              ;;
+            monitor)
+              echo "监控模式不适合 CI，请在本地运行"; exit 0
+              ;;
+            query)
+              ./skills/db-inspect.sh --db ${{ inputs.db_name }} --query "${{ inputs.custom_query }}" --no-proxy
+              ;;
+          esac

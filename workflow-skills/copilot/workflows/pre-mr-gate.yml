@@ -1,0 +1,51 @@
+name: Pre-MR Gate — 提 MR 前检查
+
+on:
+  workflow_dispatch:  # 手动触发 / Copilot 触发
+    inputs:
+      module:
+        description: Maven 模块名（留空=全部）
+        required: false
+        default: ''
+      coverage_line:
+        description: 行覆盖率阈值(%)
+        required: false
+        default: '80'
+      coverage_branch:
+        description: 分支覆盖率阈值(%)
+        required: false
+        default: '70'
+      skip_bdd:
+        description: 跳过 BDD 测试
+        type: boolean
+        default: true
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java & Maven
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: 运行 Pre-MR Gate
+        env:
+          MODULE: ${{ inputs.module }}
+          COVERAGE_LINE: ${{ inputs.coverage_line }}
+          COVERAGE_BRANCH: ${{ inputs.coverage_branch }}
+          SKIP_BDD: ${{ inputs.skip_bdd }}
+        run: |
+          chmod +x ./skills/pre-mr-gate.sh
+          ./skills/pre-mr-gate.sh
+
+      - name: 上传覆盖率报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: '**/target/site/jacoco/'

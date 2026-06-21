@@ -1,0 +1,14 @@
+{
+  "_comment": "复制到 VS Code settings.json 的 github.copilot.advanced.mcpServers 中",
+
+  "github.copilot.advanced": {
+    "mcpServers": {
+      "workflow-skills": {
+        "command": "python3",
+        "args": [
+          "/Users/zjb/claudeproject/codelife/workflow-skills/copilot/mcp-server/skill-server.py"
+        ]
+      }
+    }
+  }
+}

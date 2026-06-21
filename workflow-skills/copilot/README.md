@@ -1,57 +1,36 @@
-# Copilot 集成 — Workflow Skills
+# Copilot 集成 — 文字建议模式
 
-> 把这些 Skill 注册到 GitHub Copilot，让 Copilot 能直接建议和执行
-
----
-
-## 方式 1: Copilot 自定义指令（推荐）
-
-将 `copilot-instructions.md` 的内容复制到你项目的 `.github/copilot-instructions.md`，Copilot 就会在合适场景下主动建议这些命令。
-
-### 它能做到什么
-
-```
-你在 Copilot Chat 里说:                    Copilot 就会:
-"帮我做 MR 前的检查"                    →  建议并执行 pre-mr-gate.sh
-"这个 Sonar 问题怎么修"                 →  建议运行 scan-triage.py --auto-fix
-"覆盖率不够，帮我补测试"                 →  建议运行 coverage-hunt.py --generate-tests
-"刚部署完，帮我检查一下"                 →  建议运行 deploy-guard.sh
-"连数据库看看有没有慢查询"               →  建议运行 db-inspect.sh --diagnose
-"Jenkins 构建失败了，帮我看看"           →  建议运行 jenkins-debug.sh
-```
+> 把 `.github/copilot-instructions.md` 复制到项目根目录，Copilot Chat 就能在对应场景主动建议这些命令
 
 ---
 
-## 方式 2: VS Code Tasks
-
-将 `.vscode/tasks.json` 复制到你项目的 `.vscode/` 目录，每个 Skill 变成一个可点击的 Task：
-
-- `Ctrl+Shift+P` → `Tasks: Run Task` → 选择 skill
-- 或者在 Copilot Chat 中说 "run task pre-mr-gate"
-
----
-
-## 方式 3: Makefile（最通用）
-
-将 `Makefile` 复制到项目根目录：
+## 接入步骤
 
 ```bash
-make gate        # 等同于 pre-mr-gate.sh
-make coverage    # 等同于 coverage-hunt.py 80
-make scan-fix    # 等同于 scan-triage.py --auto-fix --dry-run
-make deploy-check ENV=staging  # 等同于 deploy-guard.sh staging
-make db-diagnose INSTANCE=xxx DB=xxx KEY=xxx
-make jenkins-log JOB=xxx BUILD=last
+# 复制到你的项目（如果已有此文件，合并进去）
+cp copilot/copilot-instructions.md ../你的项目/.github/copilot-instructions.md
 ```
+
+不需要装任何东西。Copilot 读取这个文件后，在对话中自动关联。
 
 ---
 
-## 文件清单
+## 效果
 
 ```
-copilot/
-├── README.md                         # 👈 你在这里
-├── copilot-instructions.md           # 复制到 .github/copilot-instructions.md
-├── tasks.json                        # 复制到 .vscode/tasks.json
-└── Makefile                          # 复制到项目根目录
+你说:                                    Copilot 会建议:
+"准备提 MR 了"                        → 建议运行 ./skills/pre-mr-gate.sh
+"覆盖率不够"                          → 建议运行 ./skills/coverage-hunt.py 80
+"Sonar 扫出一堆问题"                   → 建议运行 ./skills/scan-triage.py --sonar-url ...
+"看看这个能不能自动修"                 → 建议 ./skills/scan-triage.py --auto-fix --dry-run
+"部署完帮我验证一下"                   → 建议运行 ./skills/deploy-guard.sh staging
+"查一下订单库有没有慢查询"             → 建议运行 ./skills/db-inspect.sh --gcp-instance ... --diagnose
+"Jenkins 挂了帮我看看"                 → 建议运行 ./skills/jenkins-debug.sh --job ... --build last
 ```
+
+## 其他辅助文件
+
+| 文件 | 用途 |
+|------|------|
+| `tasks.json` | VS Code 内 `Ctrl+Shift+P → Tasks: Run Task` 一键执行 |
+| `Makefile` | 终端 `make gate` / `make scan-fix` 快捷方式 |

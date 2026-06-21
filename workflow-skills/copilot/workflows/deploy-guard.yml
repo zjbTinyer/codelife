@@ -1,0 +1,44 @@
+name: Deploy Guard — 部署后验证
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: 目标环境
+        required: true
+        type: choice
+        options: [dev, staging, prod]
+        default: dev
+      skip_db:
+        description: 跳过数据库检查
+        type: boolean
+        default: false
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 运行 Deploy Guard
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT || '5432' }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          SKIP_DB: ${{ inputs.skip_db }}
+        run: |
+          chmod +x ./skills/deploy-guard.sh
+          if [ "${{ inputs.env }}" = "prod" ]; then
+            ./skills/deploy-guard.sh prod --confirm
+          else
+            ./skills/deploy-guard.sh ${{ inputs.env }}
+          fi
+
+      - name: 上传验证报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-guard-report
+          path: '/tmp/deploy-guard-*.json'

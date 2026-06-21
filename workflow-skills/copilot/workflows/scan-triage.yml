@@ -1,0 +1,42 @@
+name: Scan Triage — 扫描结果分类修复
+
+on:
+  workflow_dispatch:
+    inputs:
+      sonar_project_key:
+        description: SonarQube Project Key
+        required: false
+        default: ''
+      auto_fix:
+        description: 自动修复低风险问题
+        type: boolean
+        default: false
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 运行 Scan Triage
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+        run: |
+          chmod +x ./skills/scan-triage.py
+          ARGS=""
+          [ -n "$SONAR_HOST_URL" ] && ARGS="$ARGS --sonar-url $SONAR_HOST_URL"
+          [ -n "${{ inputs.sonar_project_key }}" ] && ARGS="$ARGS --sonar-project-key ${{ inputs.sonar_project_key }}"
+          [ "${{ inputs.auto_fix }}" = "true" ] && ARGS="$ARGS --auto-fix --dry-run"
+          ./skills/scan-triage.py $ARGS
+
+      - name: 上传分类报告
+        uses: actions/upload-artifact@v4
+        with:
+          name: scan-triage-report
+          path: '**/scan-triage-*.json'
